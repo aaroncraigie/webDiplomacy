@@ -86,6 +86,9 @@ class InstallCache {
 
 		$javascript = "function loadTerritories() {\n".'Territories = $H('.json_encode($territories).');'."\n}\n";
 
+		if (!is_dir(dirname($jsonFileLocation)))
+			mkdir(dirname($jsonFileLocation), 0777, true);
+
 		file_put_contents($jsonFileLocation, $javascript);
 	}
 }
