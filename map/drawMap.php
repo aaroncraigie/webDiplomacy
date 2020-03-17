@@ -349,8 +349,7 @@ abstract class drawMap
 
 				if ( count($param) == 3 )
 					$param = $this->color($param);
-
-				if ( count($param) == 2 )
+				elseif ( count($param) == 2 )
 					$param = $param[ $this->smallmap ? 0 : 1 ];
 			}
 		}
