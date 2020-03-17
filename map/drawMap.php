@@ -1218,7 +1218,7 @@ abstract class drawMap
 	 * Add the territory names, either with GD FreeType or with the small-map overlay
 	 */
  	public function addTerritoryNames() {
- 		if ( count($this->mapNames) )
+ 		if ( is_array($this->mapNames) && count($this->mapNames) )
 		{
 			$this->mapNames = $this->loadImage($this->mapNames);
 			$this->setTransparancy($this->mapNames);
