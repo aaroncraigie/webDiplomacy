@@ -30,6 +30,52 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 	<div class="pageDescription">Start a new customized game of Diplomacy.</div>
 </div>
 <div class="content content-follow-on">
+	<?php
+	
+		// game creation tutorial
+		if (isset($_COOKIE['wD-Tutorial-GameCreate'])) 
+		{
+			$tutorialMessage = l_t('
+				This is the game creation page. In order to create a new game, you just need to fill out
+				the following form. These slides will give you a quick overview of what you need to think
+				about in order to make your game and make sure that you know what each setting you select
+				means.
+				<br>
+				On webDiplomacy, you can play games against humans or bots. If you want to play against other players,
+				you\'re in the right place. You can just fill out this form. If you want to play against bots,
+				you can click "Play a Game Against Bots." Our bots are artificial intelligence users, so they are not 
+				computer players like you might encounter in online chess, for example. They are very unique and 
+				they are trained rigorously based on the decisions real players made, which means they are both 
+				intelligent and unpredictable. Give them a try sometime, you might be surprised how good they are!
+				<br>
+				You should first give your game an appropriate title, determine how much you want each player 
+				to have to bet to join, and how long each phase would last. If you want to play a game that lasts
+				a few hours in the evening but takes your full attention, your phase length should be 5 or 10 minutes, 
+				or a "live" game. If you want the game to take place over time instead of requiring your full attention
+				one night, pick a longer phase length, or a "non-live" game. 
+				<br>
+				By default, your game has 7 days to fill. You can change that the time to fill game if you like, but the
+				important thing to know is that if you are creating a non-live game, your game will start when it is
+				filled, not when the time to fill expires. So, for example, if your non-live game has 7 days to fill
+				but is full within 3 days, it will start in 3 days, not 7. A live game will be "scheduled," meaning that
+				it will not start until the time to fill has expired, even if it fills early.
+				<br>
+				If you are playing with friends, family, or people you know outside of webDiplomacy, you are required
+				to set an invite code to your game. You can send this invite code to whoever you want to invite and know
+				that people who you do not want in your game will not accidentally join. If you are just looking for a 
+				game with some other players, you do not need to add an invite code. 
+				<br>
+				You also get to choose whether players can send messages or not, whether players are anonymized or 
+				displayed, what map you want to play on, how the game should be scored, and more. For more information on
+				these settings, just click the "?" icon next to them on the form after you close this tutorial. Good luck!
+			');
+
+			libHTML::help('Create New Game', $tutorialMessage);
+
+			unset($_COOKIE['wD-Tutorial-GameCreate']);
+			setcookie('wD-Tutorial-GameCreate', '', time()-3600);
+		}
+	?>
 	<p><a href="botgamecreate.php">Play A Game Against Bots</a></p>
 
 	<div class = "gameCreateShow">
@@ -66,7 +112,7 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 					</p>
 				</div>
 			</div>
-			<select class = "gameCreate" name="newGame[phaseMinutes]">
+			<select class = "gameCreate" name="newGame[phaseMinutes]" id="selectPhaseMinutes">
 			<?php
 				$phaseList = array(5,7, 10, 15, 20, 30, 60, 120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200, 1320,
 					1440, 1440+60, 2160, 2880, 2880+60*2, 4320, 5760, 7200, 8640, 10080, 14400);
@@ -74,18 +120,49 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 				foreach ($phaseList as $i) { print '<option value="'.$i.'"'.($i==1440 ? ' selected' : '').'>'.libTime::timeLengthText($i*60).'</option>'; }
 			?>
 			</select>
-
+			
+			<p id="phaseSwitchPeriodPara">
+				<strong>Time Until Phase Swap</strong></br>
+				<select class = "gameCreate" id="selectPhaseSwitchPeriod" name="newGame[phaseSwitchPeriod]">
+				<?php
+					$phaseList = array(-1, 10, 15, 20, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360);
+					foreach ($phaseList as $i) 
+					{
+						if ($i != -1)
+						{
+							print '<option value="'.$i.'"'.($i==-1 ? ' selected' : '').'>'.libTime::timeLengthText($i*60).'</option>';
+						}
+						else 
+						{
+							print '<option value="'.$i.'"'.($i==-1 ? ' selected' : '').'> No phase switch</option>';
+						}
+					}
+				?>
+				</select>
+			</p>
+			
+			<p id="nextPhaseMinutesPara">
+				<strong>Phase Length After Swap</strong></br>
+				<select class = "gameCreate" id="selectNextPhaseMinutes" name="newGame[nextPhaseMinutes]">
+				<?php
+					$phaseList = array(1440, 1440+60, 2160, 2880, 2880+60*2, 4320, 5760, 7200, 8640, 10080, 14400);
+					foreach ($phaseList as $i) 
+					{
+						print '<option value="'.$i.'"'.($i==1440 ? ' selected' : '').'>'.libTime::timeLengthText($i*60).'</option>';
+					}
+				?>
+				</select>
+			</p>
+			
 			<p>
 				<strong>Time to Fill Game: (5 min - 14 days)</strong></br>
 				<select class = "gameCreate" id="wait" name="newGame[joinPeriod]">
 				<?php
-				$phaseList = array(5,7, 10, 15, 20, 30, 60, 120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200, 1320,
-				1440, 1440+60, 2160, 2880, 2880+60*2, 4320, 5760, 7200, 8640, 10080, 14400, 20160);
+					$phaseList = array(5,7, 10, 15, 20, 30, 60, 120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200, 1320,
+					1440, 1440+60, 2160, 2880, 2880+60*2, 4320, 5760, 7200, 8640, 10080, 14400, 20160);
 					foreach ($phaseList as $i) 
 					{
-						$opt = libTime::timeLengthText($i*60);
-
-						print '<option value="'.$i.'"'.($i==10080 ? ' selected' : '').'>'.$opt.'</option>';
+						print '<option value="'.$i.'"'.($i==10080 ? ' selected' : '').'>'.libTime::timeLengthText($i*60).'</option>';
 					}
 				?>
 				</select>
@@ -125,14 +202,14 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 						<br /><br />
 						<strong>Available variants:</strong> </br>
 						<?php
-						foreach(Config::$variants as $variantID=>$variantName)
-						{
-							if($variantID != 57)
+							foreach(Config::$variants as $variantID=>$variantName)
 							{
-								$Variant = libVariant::loadFromVariantName($variantName);
-								print $Variant->link().'</br>';
+								if($variantID != 57)
+								{
+									$Variant = libVariant::loadFromVariantName($variantName);
+									print $Variant->link().'</br>';
+								}
 							}
-						}
 						?>
 						<br/>
 						*Please note that 1 vs 1 games will default to a 5 point bet as an unranked game no matter what bet/game type are selected.
@@ -141,18 +218,18 @@ defined('IN_CODE') or die('This script can not be run by itself.');
 			</div>
 			<select id="variant" class = "gameCreate" name="newGame[variantID]" onchange="setBotFill()">
 			<?php
-			$first=true;
-			foreach(Config::$variants as $variantID=>$variantName)
-			{
-				if($variantID != 57)
+				$first=true;
+				foreach(Config::$variants as $variantID=>$variantName)
 				{
-					$Variant = libVariant::loadFromVariantName($variantName);
-					if($first) { print '<option name="newGame[variantID]" selected value="'.$variantID.'">'.$variantName.'</option>'; }
-					else { print '<option name="newGame[variantID]" value="'.$variantID.'">'.$variantName.'</option>'; }			
-					$first=false;
+					if($variantID != 57)
+					{
+						$Variant = libVariant::loadFromVariantName($variantName);
+						if($first) { print '<option name="newGame[variantID]" selected value="'.$variantID.'">'.$variantName.'</option>'; }
+						else { print '<option name="newGame[variantID]" value="'.$variantID.'">'.$variantName.'</option>'; }			
+						$first=false;
+					}
 				}
-			}
-			print '</select>';
+				print '</select>';
 			?>
 			</br></br>
 			<div id="botFill" style="display:none">
@@ -347,4 +424,58 @@ function setBotFill(){
 		document.getElementById("botBox").checked = false;
 	}
 }
+
+// Display nextPhaseMinutes paragraph only if phaseSwitchPeriod has selected a period.
+nextPhaseMinutesPara = document.getElementById("nextPhaseMinutesPara");
+
+selectPhaseSwitchPeriod = document.getElementById("selectPhaseSwitchPeriod");
+phaseSwitchPeriodPara = document.getElementById("phaseSwitchPeriodPara");
+
+selectPhaseMinutes = document.getElementById("selectPhaseMinutes");
+
+nextPhaseMinutesPara.style.display = "none";
+phaseSwitchPeriodPara.style.display = "none";
+
+
+function updatePhasePeriod(){
+	if (selectPhaseMinutes.value > 60){
+		phaseSwitchPeriodPara.style.display = "none";
+		nextPhaseMinutesPara.style.display = "none";
+	}
+	else{
+		phaseSwitchPeriodPara.style.display = "block";
+		
+		if (selectPhaseSwitchPeriod.value == -1){	
+		nextPhaseMinutesPara.style.display = "none";
+		}
+		else{
+		nextPhaseMinutesPara.style.display = "block";
+		}
+	}
+
+
+	var phaseLength = parseInt(selectPhaseMinutes.value);
+
+
+	for (i = 0; i < selectPhaseSwitchPeriod.length; i++){
+		var optVal = parseInt(selectPhaseSwitchPeriod.options[i].value);
+		if (optVal <= 0 || optVal > phaseLength){
+			selectPhaseSwitchPeriod.options[i].hidden = false;
+			selectPhaseSwitchPeriod.options[i].disabled = false;
+		}
+		else{
+			selectPhaseSwitchPeriod.options[i].hidden = true;
+			selectPhaseSwitchPeriod.options[i].disabled = true;
+		}
+	}
+}
+
+
+
+
+selectPhaseSwitchPeriod.addEventListener("change", updatePhasePeriod)
+selectPhaseMinutes.addEventListener("change", updatePhasePeriod)
+
 </script>
+
+<?php libHTML::$footerIncludes[] = l_j('help.js'); ?>
